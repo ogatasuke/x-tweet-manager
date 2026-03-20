@@ -1,3 +1,4 @@
+from typing import List, Tuple
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -16,7 +17,7 @@ def print_header():
     )
 
 
-def print_menu(items: list[tuple[str, str]]):
+def print_menu(items: List[Tuple[str, str]]):
     console.print()
     for key, label in items:
         console.print(f"  [bold yellow]{key}[/bold yellow]  {label}")
@@ -75,21 +76,22 @@ def print_analysis(analysis: dict):
     )
 
 
-def print_tweets(tweets: list[str]):
+def print_tweets(tweets: List[str], hook_structure: bool = False):
     console.print()
     for i, tweet in enumerate(tweets, 1):
         char_count = len(tweet)
         color = "green" if char_count <= 140 else "red"
+        label = "[dim]フック → 興味付け → 強化要素[/dim]  " if hook_structure else ""
         console.print(
             Panel(
-                tweet + f"\n\n[dim]{char_count}/140 文字[/dim]",
+                tweet + f"\n\n{label}[dim]{char_count}/140 文字[/dim]",
                 title=f"[bold]案 {i}[/bold]",
                 border_style=color,
             )
         )
 
 
-def print_analyses_list(analyses: list[dict]):
+def print_analyses_list(analyses: List[dict]):
     if not analyses:
         print_info("保存済みの分析データがありません。")
         return

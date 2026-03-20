@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, List
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "analyses"
 
@@ -22,14 +23,14 @@ def save(username: str, analysis: dict) -> Path:
     return p
 
 
-def load(username: str) -> dict | None:
+def load(username: str) -> Optional[dict]:
     p = _path(username)
     if not p.exists():
         return None
     return json.loads(p.read_text())
 
 
-def list_analyses() -> list[dict]:
+def list_analyses() -> List[dict]:
     _ensure_dir()
     result = []
     for f in sorted(DATA_DIR.glob("*.json")):

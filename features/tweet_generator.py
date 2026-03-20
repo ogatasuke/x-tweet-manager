@@ -17,6 +17,7 @@ def run(x_client: XClient, claude_client: ClaudeClient):
     theme = menus.prompt_theme()
     tone = menus.prompt_tone()
     strategy = menus.prompt_strategy()
+    hook_structure = menus.prompt_hook_structure()
 
     analyses = analysis_store.list_analyses()
     analysis_data = None
@@ -39,6 +40,7 @@ def run(x_client: XClient, claude_client: ClaudeClient):
                 tone=tone,
                 strategy=strategy,
                 analysis=analysis_data,
+                hook_structure=hook_structure,
             )
         except Exception as e:
             display.print_error(f"生成エラー: {e}")
@@ -48,7 +50,7 @@ def run(x_client: XClient, claude_client: ClaudeClient):
         display.print_warning("ツイートが生成されませんでした。")
         return
 
-    display.print_tweets(tweets)
+    display.print_tweets(tweets, hook_structure=hook_structure)
 
     for i, tweet in enumerate(tweets, 1):
         action = menus.prompt_tweet_action(tweet, i)

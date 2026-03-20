@@ -1,3 +1,4 @@
+from typing import Optional, List
 from rich.prompt import Prompt, Confirm
 from cli.display import console, print_menu
 
@@ -61,7 +62,15 @@ def prompt_strategy() -> str:
     return "similar"
 
 
-def prompt_select_analysis(analyses: list[dict]) -> dict | None:
+def prompt_hook_structure() -> bool:
+    console.print(
+        "\n[bold]ツイート構成:[/bold]"
+        " [dim]フック → 興味付け → 強化要素[/dim] の3要素構成を使いますか？"
+    )
+    return Confirm.ask("3要素構成を使用する", default=True)
+
+
+def prompt_select_analysis(analyses: List[dict]) -> Optional[dict]:
     if not analyses:
         return None
     use = Confirm.ask("保存済み競合分析を参照しますか？", default=True)

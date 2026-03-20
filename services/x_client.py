@@ -39,7 +39,7 @@ class XClient:
             raise ValueError(f"ユーザー @{username} が見つかりませんでした。")
         return str(resp.data.id)
 
-    def get_user_tweets(self, username: str, max_results: int = 20) -> list[dict]:
+    def get_user_tweets(self, username: str, max_results: int = 20) -> "list[dict]":
         try:
             user_id = self.get_user_id(username)
             resp = self._app_client.get_users_tweets(

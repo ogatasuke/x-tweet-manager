@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 import anthropic
 from config import Config
 
@@ -9,7 +10,7 @@ class ClaudeClient:
     def __init__(self, config: Config):
         self._client = anthropic.Anthropic(api_key=config.anthropic_api_key)
 
-    def analyze_tweets(self, username: str, tweets: list[dict]) -> dict:
+    def analyze_tweets(self, username: str, tweets: "list[dict]") -> dict:
         tweets_text = json.dumps(tweets, ensure_ascii=False, indent=2)
         prompt = f"""以下は @{username} のツイートデータです。このアカウントの特徴を分析し、
 必ず以下のフィールドを含むJSONのみを返してください。説明文や前置きは不要です。
@@ -50,8 +51,9 @@ class ClaudeClient:
         theme: str,
         tone: str,
         strategy: str = "similar",
-        analysis: dict | None = None,
-    ) -> list[str]:
+        analysis: Optional[dict] = None,
+        hook_structure: bool = False,
+    ) -> "list[str]":
         analysis_section = ""
         if analysis:
             analysis_section = f"""
@@ -70,9 +72,21 @@ class ClaudeClient:
         else:
             strategy_instruction = "独自のスタイルでツイートを生成してください。"
 
+        if hook_structure:
+            structure_instruction = """
+【構成ルール】各ツイートは以下の3要素を1ツイート内に自然に組み込んでください：
+1. フック（冒頭1文）: スクロールを止める強いつかみ。疑問・驚き・共感・逆説など。
+2. 興味付け（中盤）: フックの答えや理由を示し「もっと知りたい」と思わせる。
+3. 興味付けの強化要素（末尾）: 具体的な数字・事例・行動喚起でさらに引き込む。
+
+ツイートは140文字以内で、3要素が自然につながるよう書いてください。"""
+        else:
+            structure_instruction = ""
+
         prompt = f"""以下の条件でツイートを3案生成してください。
 各ツイートは140文字以内で、番号付きリスト（1. 2. 3.）で返してください。
 ツイート本文のみを返し、説明や前置きは不要です。
+{structure_instruction}
 {analysis_section}
 テーマ: {theme}
 トーン: {tone}
