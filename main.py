@@ -24,36 +24,32 @@ def main():
         try:
             choice = menus.prompt_main_choice()
         except KeyboardInterrupt:
-            display.console.print("\n")
-            display.print_info("終了します。")
+            display.console.print()
             break
 
         if choice == "q":
-            display.print_info("終了します。")
             break
         elif choice == "1":
             try:
                 competitor_analysis.run(x_client, claude_client)
             except KeyboardInterrupt:
-                display.print_info("キャンセルしました。")
+                display.print_info("キャンセル")
         elif choice == "2":
             try:
                 tweet_generator.run(x_client, claude_client)
             except KeyboardInterrupt:
-                display.print_info("キャンセルしました。")
+                display.print_info("キャンセル")
         elif choice == "3":
             analyses = analysis_store.list_analyses()
             display.print_analyses_list(analyses)
             if analyses:
-                from rich.prompt import Confirm
-                if Confirm.ask("詳細を表示しますか？", default=False):
-                    from rich.prompt import Prompt
-                    val = Prompt.ask(
-                        "番号を選択",
-                        choices=[str(i) for i in range(1, len(analyses) + 1)],
-                    )
-                    selected = analyses[int(val) - 1]
-                    full = analysis_store.load(selected["username"].lstrip("@"))
+                from rich.prompt import Prompt
+                val = Prompt.ask(
+                    "詳細を見る（番号 / Enter でスキップ）",
+                    default="",
+                )
+                if val.isdigit() and 1 <= int(val) <= len(analyses):
+                    full = analysis_store.load(analyses[int(val) - 1]["username"].lstrip("@"))
                     if full:
                         display.print_analysis(full)
 

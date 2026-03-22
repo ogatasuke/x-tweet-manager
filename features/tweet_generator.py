@@ -12,12 +12,9 @@ except ImportError:
 
 
 def run(x_client: XClient, claude_client: ClaudeClient):
-    display.console.print("\n[bold cyan]=== ツイート生成・投稿 ===[/bold cyan]")
-
     theme = menus.prompt_theme()
     tone = menus.prompt_tone()
     strategy = menus.prompt_strategy()
-    hook_structure = menus.prompt_hook_structure()
 
     analyses = analysis_store.list_analyses()
     analysis_data = None
@@ -25,22 +22,21 @@ def run(x_client: XClient, claude_client: ClaudeClient):
         display.print_analyses_list(analyses)
         selected = menus.prompt_select_analysis(analyses)
         if selected:
-            full = analysis_store.load(selected["username"].lstrip("@"))
-            analysis_data = full
+            analysis_data = analysis_store.load(selected["username"].lstrip("@"))
 
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         transient=True,
     ) as progress:
-        progress.add_task("Claude でツイートを生成中...", total=None)
+        progress.add_task("ツイートを生成中...", total=None)
         try:
             tweets = claude_client.generate_tweets(
                 theme=theme,
                 tone=tone,
                 strategy=strategy,
                 analysis=analysis_data,
-                hook_structure=hook_structure,
+                hook_structure=True,
             )
         except Exception as e:
             display.print_error(f"生成エラー: {e}")
@@ -50,29 +46,29 @@ def run(x_client: XClient, claude_client: ClaudeClient):
         display.print_warning("ツイートが生成されませんでした。")
         return
 
-    display.print_tweets(tweets, hook_structure=hook_structure)
+    display.print_tweets(tweets)
 
-    for i, tweet in enumerate(tweets, 1):
-        action = menus.prompt_tweet_action(tweet, i)
-        if action == "post":
-            if not menus.confirm_post(tweet):
-                display.print_info("投稿をキャンセルしました。")
-                continue
-            try:
-                tweet_id = x_client.post_tweet(tweet)
-                display.print_success(f"投稿しました！ ID: {tweet_id}")
-            except RateLimitError as e:
-                display.print_error(str(e))
-            except PermissionError as e:
-                display.print_error(str(e))
-            except Exception as e:
-                display.print_error(f"投稿エラー: {e}")
-        elif action == "copy":
-            if _CLIPBOARD_AVAILABLE:
-                pyperclip.copy(tweet)
-                display.print_success("クリップボードにコピーしました。")
-            else:
-                display.print_warning("pyperclip が利用できません。手動でコピーしてください。")
-                display.console.print(f"\n  {tweet}\n")
-        else:
-            display.print_info("スキップしました。")
+    choice = menus.prompt_tweet_select(len(tweets))
+    if choice == "n":
+        display.print_info("スキップしました。")
+        return
+
+    tweet = tweets[int(choice) - 1]
+
+    if _CLIPBOARD_AVAILABLE:
+        pyperclip.copy(tweet)
+        display.print_success("クリップボードにコピーしました。")
+    else:
+        display.print_warning("pyperclip が利用できません。")
+        display.console.print(f"\n  {tweet}\n")
+
+    if menus.confirm_post(tweet):
+        try:
+            tweet_id = x_client.post_tweet(tweet)
+            display.print_success(f"投稿しました！ ID: {tweet_id}")
+        except RateLimitError as e:
+            display.print_error(str(e))
+        except PermissionError as e:
+            display.print_error(str(e))
+        except Exception as e:
+            display.print_error(f"投稿エラー: {e}")
